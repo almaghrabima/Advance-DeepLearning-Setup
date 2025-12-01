@@ -6,7 +6,17 @@ TAG="torch2.8-cuda12.8"
 REMOTE_IMAGE="almamoha/advance-deeplearning:${TAG}"
 
 echo "🐳 Building docker image: ${LOCAL_IMAGE}"
-sudo sudo docker build -t "${LOCAL_IMAGE}" .
+sudo docker build -t "${LOCAL_IMAGE}" .
+
+echo "🔐 Checking Docker Hub authentication..."
+# Check if logged in (check both user and root docker configs)
+if [ ! -f ~/.docker/config.json ] && [ ! -f /root/.docker/config.json ]; then
+    echo "⚠️  Not logged into Docker Hub. Please login:"
+    sudo docker login
+elif ! grep -q "auth" ~/.docker/config.json 2>/dev/null && ! sudo grep -q "auth" /root/.docker/config.json 2>/dev/null; then
+    echo "⚠️  Not logged into Docker Hub. Please login:"
+    sudo docker login
+fi
 
 echo "🏷️ Tagging image as: ${REMOTE_IMAGE}"
 sudo docker tag "${LOCAL_IMAGE}" "${REMOTE_IMAGE}"
