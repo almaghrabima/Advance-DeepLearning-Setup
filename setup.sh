@@ -78,26 +78,26 @@ else
 fi
 
 export UV_LINK_MODE=copy
-export UV_PROJECT_ENVIRONMENT="/workspace/.venvs/$PROJECT_DIR"
-mkdir -p /workspace/.venvs
-rm -rf "/workspace/$PROJECT_DIR/.venv" || true
-
-if [ ! -d "/workspace/.venvs/$PROJECT_DIR" ]; then
-  uv venv "/workspace/.venvs/$PROJECT_DIR"
-fi
-
-. "/workspace/.venvs/$PROJECT_DIR/bin/activate"
 
 cd "/workspace/$PROJECT_DIR"
+
+export UV_PROJECT_ENVIRONMENT=.venv
+
+if [ ! -d ".venv" ]; then
+  uv venv .venv
+fi
+
+. .venv/bin/activate
+
 if [ -f pyproject.toml ]; then
-  uv sync
+  uv sync --python .venv/bin/python --extra gpu
 elif [ -f requirements.txt ]; then
   uv pip install -r requirements.txt
 fi
 
 uv pip install ipykernel
 
-"/workspace/.venvs/$PROJECT_DIR/bin/python" -m ipykernel install \
+.venv/bin/python -m ipykernel install \
   --user --name "$PROJECT_DIR" --display-name "$PROJECT_DIR (uv)" || true
 
 if [ -n "${WANDB_API_KEY:-}" ]; then
