@@ -1,5 +1,6 @@
 # Build for amd64 architecture (required for Vast.ai)
-FROM --platform=linux/amd64 python:3.11-slim
+# Note: Platform is specified at build time via --platform flag
+FROM python:3.11-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /workspace
