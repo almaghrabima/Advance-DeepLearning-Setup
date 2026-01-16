@@ -15,25 +15,25 @@ echo "⚠️  Building for: linux/amd64 (x86_64) - Required for Vast.ai"
 echo ""
 
 echo "🔨 Building image with --platform linux/amd64..."
-sudo docker build --platform linux/amd64 -t "${LOCAL_IMAGE}" .
+docker build --platform linux/amd64 -t "${LOCAL_IMAGE}" .
 
 echo ""
 echo "🔐 Checking Docker Hub authentication..."
 if [ ! -f ~/.docker/config.json ] && [ ! -f /root/.docker/config.json ]; then
     echo "⚠️  Not logged into Docker Hub. Please login:"
-    sudo docker login
-elif ! grep -q "auth" ~/.docker/config.json 2>/dev/null && ! sudo grep -q "auth" /root/.docker/config.json 2>/dev/null; then
+    docker login
+elif ! grep -q "auth" ~/.docker/config.json 2>/dev/null && ! grep -q "auth" /root/.docker/config.json 2>/dev/null; then
     echo "⚠️  Not logged into Docker Hub. Please login:"
-    sudo docker login
+    docker login
 fi
 
 echo ""
 echo "🏷️ Tagging image as: ${REMOTE_IMAGE}"
-sudo docker tag "${LOCAL_IMAGE}" "${REMOTE_IMAGE}"
+docker tag "${LOCAL_IMAGE}" "${REMOTE_IMAGE}"
 
 echo ""
-echo "⬆️ Pushing image (this may take a while for 17.9GB)..."
-sudo docker push "${REMOTE_IMAGE}"
+echo "⬆️ Pushing image (this may take a while)..."
+docker push "${REMOTE_IMAGE}"
 
 echo ""
 echo "✅ Done! Image pushed: ${REMOTE_IMAGE}"

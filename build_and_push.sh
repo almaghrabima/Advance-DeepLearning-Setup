@@ -5,8 +5,9 @@ LOCAL_IMAGE="advance-deeplearning-setup"
 TAG="torch2.8-cuda12.8"
 REMOTE_IMAGE="almamoha/advance-deeplearning:${TAG}"
 
-echo "🐳 Building docker image: ${LOCAL_IMAGE}"
-sudo docker build -t "${LOCAL_IMAGE}" .
+echo "🐳 Building docker image for ARM64: ${LOCAL_IMAGE}"
+echo "⚠️  Building for linux/arm64 platform"
+sudo docker build --platform linux/arm64 -t "${LOCAL_IMAGE}" .
 
 echo "🔐 Checking Docker Hub authentication..."
 # Check if logged in (check both user and root docker configs)

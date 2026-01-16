@@ -74,6 +74,11 @@ else
     echo ""
     echo "💡 To create an instance:"
     echo "  1. Go to: https://console.vast.ai/create"
-    echo "  2. Select template: advance-deeplearning-vastai (ID: 329499)"
+    echo "  2. Select template: advance-deeplearning-vastai (ID: 329609)"
     echo "  3. Choose a GPU and click 'Rent'"
+    echo ""
+    echo "📝 After instance is created, verify smctm access:"
+    echo "  - SSH into the instance"
+    echo "  - Run: ls -la /workspace/smctm/"
+    echo "  - Run: cd /workspace/smctm && git status"
 fi

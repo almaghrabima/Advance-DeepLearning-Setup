@@ -48,6 +48,13 @@ if [ ${#MISSING_VARS[@]} -ne 0 ]; then
     exit 1
 fi
 
+# Use PROJECT_REPO as fallback for GITHUB_REPO if not set
+# GITHUB_REPO is used by entrypoint.sh to clone the repository (e.g., smctm)
+if [ -z "${GITHUB_REPO:-}" ]; then
+    echo "ℹ️  GITHUB_REPO not set, using PROJECT_REPO as fallback: ${PROJECT_REPO}"
+    export GITHUB_REPO="${PROJECT_REPO}"
+fi
+
 # Check if template JSON file exists
 if [ ! -f "$TEMPLATE_JSON" ]; then
     echo "❌ Error: Template JSON file not found: $TEMPLATE_JSON"
@@ -59,7 +66,8 @@ echo "🔗 API Endpoint: $VAST_API_URL"
 echo ""
 
 # Build the env string from environment variables
-ENV_STRING="GIT_USER_EMAIL=${GIT_USER_EMAIL} WANDB_API_KEY=${WANDB_API_KEY} PROJECT_REPO=${PROJECT_REPO} HF_HUB_ENABLE_HF_TRANSFER=1 GITHUB_PAT=${GITHUB_PAT} HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN} GIT_USER_NAME=${GIT_USER_NAME}"
+# GITHUB_REPO is used by the entrypoint.sh to clone the repository (e.g., smctm)
+ENV_STRING="GIT_USER_EMAIL=${GIT_USER_EMAIL} WANDB_API_KEY=${WANDB_API_KEY} PROJECT_REPO=${PROJECT_REPO} GITHUB_REPO=${GITHUB_REPO} HF_HUB_ENABLE_HF_TRANSFER=1 GITHUB_PAT=${GITHUB_PAT} HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN} GIT_USER_NAME=${GIT_USER_NAME}"
 
 # Create temporary JSON file with substituted values
 TEMP_JSON=$(mktemp)
@@ -108,9 +116,16 @@ if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
     if [ -n "$TEMPLATE_ID" ] && [ "$TEMPLATE_ID" != "null" ]; then
         echo "📝 Template ID: $TEMPLATE_ID"
         echo ""
+        echo "✅ Template created with GitHub repository configuration:"
+        echo "   - GITHUB_REPO: ${GITHUB_REPO}"
+        echo "   - Docker Image: almamoha/advance-deeplearning:torch2.8-cuda12.8-vastai"
+        echo ""
         echo "Next steps:"
         echo "  1. Verify template in Vast.ai UI: https://console.vast.ai/templates"
         echo "  2. Launch an instance using this template"
+        echo "  3. After instance starts, SSH in and verify smctm is cloned:"
+        echo "     - ls -la /workspace/smctm/"
+        echo "     - cd /workspace/smctm && git status"
     fi
 else
     echo "❌ Error: Failed to create template (HTTP $HTTP_CODE)"
