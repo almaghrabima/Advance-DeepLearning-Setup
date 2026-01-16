@@ -1,0 +1,6 @@
+{
+  "name": "advance-deeplearning-vastai",
+  "image": "almamoha/advance-deeplearning",
+  "tag": "torch2.8-cuda12.8-vastai",
+  "env": "GIT_USER_EMAIL=your_email@example.com WANDB_API_KEY=your_wandb_api_key_here PROJECT_REPO=https://github.com/yourusername/yourrepo.git HF_HUB_ENABLE_HF_TRANSFER=1 GITHUB_PAT=your_github_pat_here HUGGING_FACE_HUB_TOKEN=your_huggingface_token_here GIT_USER_NAME=your_username"
+}
