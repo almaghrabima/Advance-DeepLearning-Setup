@@ -5,8 +5,11 @@ LOCAL_IMAGE="advance-deeplearning-setup"
 TAG="torch2.8-cuda12.8-vastai"
 REMOTE_IMAGE="almamoha/advance-deeplearning:${TAG}"
 
-echo "🐳 Building docker image for Vast.ai: ${LOCAL_IMAGE}"
-sudo docker build -t "${LOCAL_IMAGE}" .
+echo "🐳 Building docker image for Vast.ai (linux/amd64 platform): ${LOCAL_IMAGE}"
+echo "⚠️  Building for linux/amd64 platform (required for Vast.ai x86_64 instances)"
+echo "   Your system is ARM64, but Vast.ai requires x86_64/amd64"
+echo ""
+sudo docker build --platform linux/amd64 -t "${LOCAL_IMAGE}" .
 
 echo "🔐 Checking Docker Hub authentication..."
 # Check if logged in (check both user and root docker configs)
