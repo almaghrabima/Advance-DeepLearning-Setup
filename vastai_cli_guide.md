@@ -170,8 +170,10 @@ python3.11 -m pip install vastai
 - Manually clone if needed:
   ```bash
   cd /workspace
-  export GITHUB_PAT="your_pat_here"
-  git clone https://${GITHUB_PAT}@github.com/almaghrabima/smctm.git
+  # Load from .env file or set manually
+  source .env
+  export GITHUB_PAT="${GITHUB_PAT}"
+  git clone https://${GITHUB_PAT}@github.com/yourusername/yourrepo.git
   ```
 
 ## Reference

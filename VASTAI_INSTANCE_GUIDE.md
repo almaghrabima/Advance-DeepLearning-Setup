@@ -57,8 +57,9 @@ fi
 If you have the Vast.ai CLI working:
 
 ```bash
-# Set API key
-export VAST_API_KEY="d27d2dbcdd8d0c38da3f3cb00540fa81c18f6838eff6e8e0774d4a6a56cbcfbd"
+# Set API key (load from .env file)
+source .env
+export VAST_API_KEY="${VAST_API_TOKEN}"
 
 # Search for offers
 vastai search offers --limit 5
@@ -119,11 +120,15 @@ If the smctm project is not in `/workspace`:
 If environment variables are missing:
 
 1. **Check template configuration** in Vast.ai UI
-2. **Manually export them**:
+2. **Manually export them** (or load from .env file):
    ```bash
-   export GIT_USER_EMAIL="almaghrabima@gmail.com"
-   export WANDB_API_KEY="e9f610e13eda0eb20f98b7d3d12da911fb8fc26d"
-   export PROJECT_REPO="https://github.com/almaghrabima/smctm.git"
+   # Option 1: Load from .env file
+   source .env
+   
+   # Option 2: Set manually
+   export GIT_USER_EMAIL="your_email@example.com"
+   export WANDB_API_KEY="your_wandb_api_key_here"
+   export PROJECT_REPO="https://github.com/yourusername/yourrepo.git"
    # ... etc
    ```
 
