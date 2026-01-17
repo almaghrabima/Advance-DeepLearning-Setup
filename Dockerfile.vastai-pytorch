@@ -73,9 +73,15 @@ RUN chmod +x /usr/local/bin/onstart.sh
 COPY start-ssh.sh /usr/local/bin/start-ssh.sh
 RUN chmod +x /usr/local/bin/start-ssh.sh
 
+# Create /start.sh that Vast.ai may call in Jupyter/SSH modes
+# This ensures SSH starts even when entrypoint is overridden
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 8888 6006 22 13337
 
-# Note: When Vast.ai uses SSH launch mode, it overrides this ENTRYPOINT
-# The /start.sh script above will be called via the template's onstart script
+# Note: When Vast.ai uses SSH/Jupyter launch modes, it may override this ENTRYPOINT
+# The /start.sh script ensures SSH starts in those cases
+# For entrypoint mode, this entrypoint will run
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash", "-lc", "start-project.sh"]
