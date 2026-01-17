@@ -16,6 +16,67 @@ log() {
 
 log "🚀 Starting onstart script..."
 
+# CRITICAL: Start SSH server FIRST (before anything else)
+# This is essential for Vast.ai SSH launch mode to work
+# Vast.ai overrides the Docker entrypoint, so SSH must start here
+log "🔧 Ensuring SSH server is running (critical for Vast.ai connections)..."
+
+# Ensure SSH directories exist
+mkdir -p /var/run/sshd
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh 2>/dev/null || true
+
+# Generate SSH host keys if they don't exist (required for sshd to start)
+if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
+    log "🔑 Generating SSH host keys (required for SSH server)..."
+    ssh-keygen -A 2>&1 | tee -a "$LOG_FILE" || {
+        log "❌ Failed to generate SSH host keys"
+        # Try alternative method
+        mkdir -p /etc/ssh
+        ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N "" 2>&1 | tee -a "$LOG_FILE" || true
+        ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N "" 2>&1 | tee -a "$LOG_FILE" || true
+        ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N "" 2>&1 | tee -a "$LOG_FILE" || true
+    }
+fi
+
+# Check if SSH is already running
+if pgrep -x sshd > /dev/null; then
+    log "ℹ️  SSH server is already running (PID: $(pgrep -x sshd))"
+else
+    log "🚀 Starting SSH server daemon..."
+    
+    # Start SSH daemon in background
+    # -D: don't detach (run in foreground), but we background with &
+    # -e: send output to stderr (useful for debugging)
+    # -f: specify config file (optional, uses default)
+    /usr/sbin/sshd -D -e 2>&1 | tee -a "$LOG_FILE" &
+    SSH_PID=$!
+    log "✅ SSH server start command executed (PID: $SSH_PID)"
+    
+    # Wait for SSH to initialize
+    sleep 3
+    
+    # Verify SSH is running
+    if pgrep -x sshd > /dev/null; then
+        log "✅ SSH server is running successfully (PID: $(pgrep -x sshd))"
+        # Show listening ports for debugging
+        if command -v netstat > /dev/null 2>&1; then
+            netstat -tlnp 2>/dev/null | grep :22 | tee -a "$LOG_FILE" || true
+        elif command -v ss > /dev/null 2>&1; then
+            ss -tlnp 2>/dev/null | grep :22 | tee -a "$LOG_FILE" || true
+        else
+            log "⚠️  Cannot verify SSH port (netstat/ss not available)"
+        fi
+    else
+        log "❌ SSH server failed to start!"
+        log "Attempting to diagnose..."
+        # Try to see what went wrong
+        /usr/sbin/sshd -T 2>&1 | head -10 | tee -a "$LOG_FILE" || true
+        log "⚠️  SSH server is not running - connections will fail!"
+        log "⚠️  You may need to start it manually or check configuration"
+    fi
+fi
+
 # Source environment variables from /etc/environment if they exist
 if [ -f /etc/environment ]; then
     set -a

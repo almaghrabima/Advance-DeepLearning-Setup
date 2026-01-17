@@ -5,6 +5,43 @@ set -euo pipefail
 # Usage: Set GITHUB_REPO environment variable with the GitHub repository URL
 # Example: GITHUB_REPO=https://github.com/user/repo.git
 
+# Start SSH server in the background (required for Vast.ai SSH connections)
+# Check if SSH is already running, if not start it
+if ! pgrep -x sshd > /dev/null; then
+    echo "🔧 Starting SSH server..."
+    # Ensure SSH directories exist
+    mkdir -p /var/run/sshd
+    mkdir -p /root/.ssh
+    chmod 700 /root/.ssh
+    
+    # Generate SSH host keys if they don't exist
+    if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
+        echo "🔑 Generating SSH host keys..."
+        ssh-keygen -A
+    fi
+    
+    # Start SSH daemon in background (non-blocking)
+    # -D: don't detach (run in foreground), but we background with &
+    # -e: send output to stderr (useful for debugging)
+    /usr/sbin/sshd -D -e &
+    SSH_PID=$!
+    echo "✅ SSH server started (PID: $SSH_PID)"
+    
+    # Wait a moment for SSH to initialize
+    sleep 2
+    
+    # Verify SSH is running
+    if pgrep -x sshd > /dev/null; then
+        echo "✅ SSH server is running on port 22"
+        # Show listening ports for debugging
+        netstat -tlnp 2>/dev/null | grep :22 || ss -tlnp 2>/dev/null | grep :22 || echo "⚠️  Could not verify SSH port (netstat/ss may not be available)"
+    else
+        echo "⚠️  SSH server may not have started properly"
+    fi
+else
+    echo "ℹ️  SSH server is already running"
+fi
+
 # Export environment variables to /etc/environment so they're available to all processes
 # This ensures they're available even if Vast.ai's SSH setup doesn't export them
 if [ -n "${GITHUB_REPO:-}" ]; then
