@@ -61,6 +61,10 @@ RUN chmod +x /usr/local/bin/start-project.sh
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Create onstart script for Vast.ai
+COPY onstart.sh /usr/local/bin/onstart.sh
+RUN chmod +x /usr/local/bin/onstart.sh
+
 EXPOSE 8888 6006 22 13337
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

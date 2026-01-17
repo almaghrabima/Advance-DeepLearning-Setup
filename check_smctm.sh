@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Check if smctm repository was cloned in Vast.ai instance
+
+INSTANCE_IP="${1:-142.170.89.112}"
+INSTANCE_PORT="${2:-62008}"
+SSH_KEY="${3:-$HOME/.ssh/vastai}"
+
+echo "🔍 Checking for smctm repository"
+echo "================================"
+echo "Instance: $INSTANCE_IP:$INSTANCE_PORT"
+echo ""
+
+echo "📝 Connect with:"
+echo "   ssh -i $SSH_KEY root@$INSTANCE_IP -p $INSTANCE_PORT"
+echo ""
+echo "Then run these commands:"
+echo ""
+echo "   # Check /workspace"
+echo "   ls -la /workspace/"
+echo ""
+echo "   # Check if smctm exists"
+echo "   ls -la /workspace/smctm/ 2>/dev/null && echo '✅ smctm EXISTS!' || echo '❌ smctm NOT FOUND'"
+echo ""
+echo "   # If not found, check onstart log"
+echo "   cat /var/log/onstart.log"
+echo ""
+echo "   # Check if onstart script exists"
+echo "   ls -la /usr/local/bin/onstart.sh"
+echo ""
+echo "   # Check environment variables"
+echo "   cat /etc/environment | grep GITHUB"
+echo ""
