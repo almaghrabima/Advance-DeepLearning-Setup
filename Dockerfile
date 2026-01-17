@@ -5,11 +5,51 @@ FROM python:3.11-slim
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /workspace
 
-# Install system dependencies
+# Install system dependencies including SSH server and tmux (required by Vast.ai)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         nano git curl build-essential \
+        openssh-server sudo tmux \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure SSH server for Vast.ai compatibility
+RUN mkdir -p /var/run/sshd && \
+    mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh && \
+    # Initialize SSH server to create default config and host keys
+    ssh-keygen -A && \
+    # Ensure sshd_config exists and is properly configured
+    [ -f /etc/ssh/sshd_config ] || (mkdir -p /etc/ssh && ssh-keygen -A) && \
+    # Configure SSH for Vast.ai - ensure all settings are set
+    sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config 2>/dev/null || \
+    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
+    sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config 2>/dev/null || \
+    echo "PasswordAuthentication no" >> /etc/ssh/sshd_config && \
+    sed -i 's/^#*StrictModes.*/StrictModes no/' /etc/ssh/sshd_config 2>/dev/null || \
+    echo "StrictModes no" >> /etc/ssh/sshd_config && \
+    grep -q "ClientAliveInterval" /etc/ssh/sshd_config || echo "ClientAliveInterval 10" >> /etc/ssh/sshd_config && \
+    grep -q "ClientAliveCountMax" /etc/ssh/sshd_config || echo "ClientAliveCountMax 2" >> /etc/ssh/sshd_config && \
+    grep -q "^UsePAM" /etc/ssh/sshd_config || echo "UsePAM no" >> /etc/ssh/sshd_config && \
+    grep -q "ChallengeResponseAuthentication" /etc/ssh/sshd_config || echo "ChallengeResponseAuthentication no" >> /etc/ssh/sshd_config && \
+    # Create banner file for Vast.ai
+    echo 'Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.' > /etc/banner && \
+    echo 'Have fun!' >> /etc/banner && \
+    grep -q "Banner" /etc/ssh/sshd_config || echo "Banner /etc/banner" >> /etc/ssh/sshd_config && \
+    # Set LogLevel
+    sed -i '/^[ \t]*LogLevel /d' /etc/ssh/sshd_config && \
+    echo "LogLevel VERBOSE" >> /etc/ssh/sshd_config
+
+# Configure tmux to auto-start on SSH login
+RUN echo '' >> /root/.bashrc && \
+    echo '# Auto-start tmux on SSH login' >> /root/.bashrc && \
+    echo 'if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ] && [ -n "$SSH_CONNECTION" ]; then' >> /root/.bashrc && \
+    echo '    # Check if tmux session exists, if not create one' >> /root/.bashrc && \
+    echo '    if ! tmux has-session -t main 2>/dev/null; then' >> /root/.bashrc && \
+    echo '        tmux new-session -d -s main' >> /root/.bashrc && \
+    echo '    fi' >> /root/.bashrc && \
+    echo '    # Attach to existing session or create new one' >> /root/.bashrc && \
+    echo '    exec tmux attach-session -t main' >> /root/.bashrc && \
+    echo 'fi' >> /root/.bashrc
 
 # Install PyTorch for amd64 (CPU version, or use CUDA version if needed)
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu

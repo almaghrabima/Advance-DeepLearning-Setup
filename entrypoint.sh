@@ -37,12 +37,20 @@ if [ -n "${GITHUB_REPO:-}" ]; then
     fi
     
     # Clone or update repository
+    # Disable interactive prompts for git
+    export GIT_TERMINAL_PROMPT=0
+    
     if [ -d "$REPO_NAME/.git" ]; then
         echo "🔄 Repository exists, pulling latest changes..."
-        git -C "$REPO_NAME" pull --ff-only || true
+        GIT_TERMINAL_PROMPT=0 git -C "$REPO_NAME" pull --ff-only || true
     else
         echo "📥 Cloning repository..."
-        git clone "$AUTH_REPO_URL" "$REPO_NAME"
+        # Disable terminal prompts and clone
+        GIT_TERMINAL_PROMPT=0 git clone "$AUTH_REPO_URL" "$REPO_NAME" 2>&1 || {
+            echo "⚠️  Git clone with PAT failed, trying without authentication..."
+            # Fallback: try without auth (for public repos)
+            GIT_TERMINAL_PROMPT=0 git clone "$GITHUB_REPO" "$REPO_NAME" 2>&1 || echo "❌ Git clone failed"
+        }
     fi
     
     echo "✅ Repository ready at: /workspace/$REPO_NAME"

@@ -29,7 +29,7 @@ echo ""
 # Step 1: Search for available offers with good internet speed
 # Filter for on-demand offers and sort by network speed/bandwidth
 echo "🔍 Searching for offers with fast internet..."
-OFFERS_RESPONSE=$(curl -s -X GET "https://console.vast.ai/api/v0/offers/" \
+OFFERS_RESPONSE=$(curl -s -X GET "https://cloud.vast.ai/api/v0/offers/" \
     -H "Authorization: Bearer $API_TOKEN" \
     -G -d "q=on-demand" \
     -d "type=ask")
@@ -50,11 +50,14 @@ try:
     # Some offers have 'inet_up' and 'inet_down' fields for network speed
     def get_network_score(offer):
         # Try to get network bandwidth/speed metrics
-        inet_up = offer.get('inet_up', 0) or 0
-        inet_down = offer.get('inet_down', 0) or 0
-        bandwidth = offer.get('bandwidth', 0) or 0
-        # Return combined score (prioritize higher values)
-        return max(inet_up, inet_down, bandwidth, 0)
+        inet_up = float(offer.get('inet_up', 0) or 0)
+        inet_down = float(offer.get('inet_down', 0) or 0)
+        bandwidth = float(offer.get('bandwidth', 0) or 0)
+        # Return combined score (upload + download for total throughput)
+        # If bandwidth is available, use it; otherwise sum upload and download
+        if bandwidth > 0:
+            return bandwidth
+        return inet_up + inet_down
     
     # Sort by network score (descending)
     on_demand.sort(key=get_network_score, reverse=True)
@@ -63,13 +66,17 @@ try:
     print(f"✅ Found {len(on_demand)} on-demand offers (sorted by network speed):\n")
     for i, offer in enumerate(on_demand[:5], 1):
         network_score = get_network_score(offer)
+        inet_up = float(offer.get('inet_up', 0) or 0)
+        inet_down = float(offer.get('inet_down', 0) or 0)
         print(f"{i}. Offer ID: {offer.get('id')}")
         print(f"   GPU: {offer.get('gpu_name', 'N/A')}")
         print(f"   Price: ${offer.get('dph_total', 0):.2f}/hr")
         print(f"   RAM: {offer.get('ram', 0)/1024:.1f}GB")
         print(f"   Disk: {offer.get('disk_space', 0):.1f}GB")
-        if network_score > 0:
-            print(f"   Network Score: {network_score}")
+        if inet_up > 0 or inet_down > 0:
+            print(f"   Network: ↑{inet_up:.1f} Mbps / ↓{inet_down:.1f} Mbps (Total: {network_score:.1f} Mbps)")
+        elif network_score > 0:
+            print(f"   Network: {network_score:.1f} Mbps")
         print("")
     
     # Select the best one (highest network score)
@@ -94,7 +101,7 @@ echo ""
 echo "🚀 Creating instance on offer $OFFER_ID with template $TEMPLATE_ID..."
 
 # Step 2: Create instance using template
-CREATE_RESPONSE=$(curl -s -X PUT "https://console.vast.ai/api/v0/asks/$OFFER_ID" \
+CREATE_RESPONSE=$(curl -s -X PUT "https://cloud.vast.ai/api/v0/asks/$OFFER_ID" \
     -H "Authorization: Bearer $API_TOKEN" \
     -H "Content-Type: application/json" \
     -d "{
@@ -142,7 +149,7 @@ sleep 30
 # Step 3: Get instance details and check for smctm
 echo ""
 echo "📊 Getting instance details and checking for smctm..."
-INSTANCE_RESPONSE=$(curl -s -X GET "https://console.vast.ai/api/v0/asks/" \
+INSTANCE_RESPONSE=$(curl -s -X GET "https://cloud.vast.ai/api/v0/asks/" \
     -H "Authorization: Bearer $API_TOKEN")
 
 echo "$INSTANCE_RESPONSE" | python3 << PYTHON
