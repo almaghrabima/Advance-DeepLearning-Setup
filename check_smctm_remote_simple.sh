@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Simple script to check smctm - run this AFTER connecting via SSH
+
+echo "📋 Quick smctm Check Commands"
+echo "=============================="
+echo ""
+echo "Run these commands after connecting via SSH:"
+echo ""
+echo "1. Check workspace:"
+echo "   ls -la /workspace/"
+echo ""
+echo "2. Check if smctm exists:"
+echo "   test -d /workspace/smctm && echo '✅ smctm found' || echo '❌ smctm not found'"
+echo ""
+echo "3. If smctm exists, check details:"
+echo "   cd /workspace/smctm"
+echo "   ls -la"
+echo "   git status"
+echo "   git remote -v"
+echo ""
+echo "4. Check environment:"
+echo "   env | grep -E 'PROJECT_REPO|GITHUB_REPO|GIT_USER'"
+echo ""
+echo "================================"
+echo ""
+echo "🚀 One-liner (copy and paste after connecting):"
+echo ""
+cat << 'EOF'
+ls -la /workspace/ && echo "" && if [ -d /workspace/smctm ]; then echo "✅ smctm found!" && cd /workspace/smctm && ls -la | head -10 && git status 2>&1 | head -5 && git remote -v; else echo "❌ smctm not found"; fi && echo "" && env | grep -E "PROJECT_REPO|GITHUB_REPO|GIT_USER"
+EOF
+echo ""
