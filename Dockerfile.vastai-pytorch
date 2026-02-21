@@ -3,6 +3,10 @@
 # Using vastai/pytorch base image with automatic tag support
 # Using cuda-13.0.2-auto tag (compatible with Vast.ai automatic tag system)
 # When using in Vast.ai templates, you can select [Automatic] tag in the UI
+#
+# No secrets are baked in. Pass at runtime (e.g. Vast.ai template env):
+#   GITHUB_PAT, PROJECT_REPO or GITHUB_REPO — used by entrypoint to clone the repo.
+# When your token expires, update GITHUB_PAT in the template only; no image rebuild needed.
 FROM vastai/pytorch:cuda-13.0.2-auto
 
 ENV DEBIAN_FRONTEND=noninteractive
